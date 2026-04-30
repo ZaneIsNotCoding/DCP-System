@@ -125,10 +125,12 @@ $user = $_SESSION['user'];
         <a href="reports.php">
             <i class="bi bi-bar-chart"></i> Reports
         </a>
-        <a href="users.php">
+        <!-- <a href="users.php">
             <i class="bi bi-people"></i> Users
+        </a> -->
+        <a href="assign_requirement.php">
+            <i class="bi bi-plus-circle"></i> Assign Requirements
         </a>
-
         <a href="requirements.php">
             <i class="bi bi-list-check"></i> Requirements
         </a>

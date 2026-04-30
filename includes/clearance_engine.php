@@ -1,7 +1,7 @@
 <?php
 require_once '../includes/session.php';
 require_once '../config/database.php';
-require_once '../includes/clearance_engine.php'; // FIXED
+
 /**
  * REAL-TIME CLEARANCE SYNC ENGINE
  * Automatically computes and updates student clearance status

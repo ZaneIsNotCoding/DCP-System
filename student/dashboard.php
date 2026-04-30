@@ -1,7 +1,7 @@
 <?php
 require_once '../includes/session.php';
 require_once '../config/database.php';
-
+include 'partials/sidebar.php';
 // AUTH CHECK
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'student') {
     header("Location: ../index.php");
@@ -18,31 +18,26 @@ $statusStmt = $conn->prepare("SELECT clearance_status FROM users WHERE id = ?");
 $statusStmt->execute([$student_id]);
 $status = $statusStmt->fetchColumn();
 
-// =====================
-// FETCH REQUIREMENTS
-// =====================
-$stmt = $conn->prepare("SELECT * FROM requirements WHERE student_id = ?");
+
+$stmt = $conn->prepare("
+    SELECT 
+        COUNT(*) as total,
+        SUM(status='cleared') as cleared,
+        SUM(status!='cleared') as pending
+    FROM requirements
+    WHERE student_id = ?
+");
 $stmt->execute([$student_id]);
-$requirements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$total = count($requirements);
-$cleared = 0;
-$pending = 0;
+$total = $data['total'];
+$cleared = $data['cleared'];
+$pending = $data['pending'];
 
-foreach ($requirements as $req) {
-    if ($req['status'] === 'cleared') {
-        $cleared++;
-    } else {
-        $pending++;
-    }
-}
-
-// =====================
-// PROGRESS CALCULATION
-// =====================
 $percent = ($total > 0) ? ($cleared / $total) * 100 : 0;
+$is_cleared = (strtolower(trim($status)) === 'cleared');
 ?>
-
+s
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -118,32 +113,6 @@ $percent = ($total > 0) ? ($cleared / $total) * 100 : 0;
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-    <h4 class="text-center mb-4">DCP System</h4>
-
-    <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a href="requirements.php"><i class="bi bi-list-check"></i> Requirements</a>
-    <a href="print.php"><i class="bi bi-printer"></i> Print Clearance</a>
-
-    <!-- LOCKED / UNLOCKED PDF -->
-    <div class="px-3 mt-2">
-        <?php if ($status == 'cleared'): ?>
-            <a href="print_clearance_pdf.php" class="btn btn-primary w-100">
-                📄 Download PDF Certificate
-            </a>
-        <?php else: ?>
-            <button class="btn btn-secondary w-100" disabled>
-                🔒 Certificate Locked
-            </button>
-        <?php endif; ?>
-    </div>
-
-    <a href="../logout.php" class="mt-3">
-        <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-</div>
-
 <!-- MAIN -->
 <div class="main">
 
@@ -187,57 +156,17 @@ $percent = ($total > 0) ? ($cleared / $total) * 100 : 0;
             </div>
         </div>
     </div>
-
-    <!-- PROGRESS -->
-    <div class="card card-box mt-4 p-3">
-        <h6>Progress</h6>
-        <div class="progress">
-            <div class="progress-bar bg-primary" style="width: <?php echo $percent; ?>%">
-                <?php echo round($percent); ?>%
-            </div>
-        </div>
-    </div>
-
-    <!-- REQUIREMENTS TABLE -->
-    <div class="card card-box mt-4 p-3">
-        <h6>Clearance Status</h6>
-
-        <table class="table table-striped mt-2">
-            <thead>
-                <tr>
-                    <th>Requirement</th>
-                    <th>Status</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-
-            <tbody>
-            <?php if ($total == 0): ?>
-                <tr>
-                    <td colspan="3" class="text-center text-muted">
-                        No requirements assigned yet.
-                    </td>
-                </tr>
-            <?php else: ?>
-                <?php foreach ($requirements as $req): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($req['requirement_name']); ?></td>
-                    <td>
-                        <?php if ($req['status'] == 'cleared'): ?>
-                            <span class="badge bg-success">Cleared</span>
-                        <?php else: ?>
-                            <span class="badge bg-warning">Pending</span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?php echo htmlspecialchars($req['remarks'] ?? 'N/A'); ?></td>
-                </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-            </tbody>
-
-        </table>
-    </div>
-
+    <div class="mt-4">
+    <?php if ($is_cleared): ?>
+        <a href="student_print_clearance.php" class="btn btn-success btn-lg">
+            🖨 Print Clearance Certificate
+        </a>
+    <?php else: ?>
+        <button class="btn btn-secondary btn-lg" disabled>
+            🖨 Clearance Not Available
+        </button>
+    <?php endif; ?>
+</div>
 </div>
 
 </body>
