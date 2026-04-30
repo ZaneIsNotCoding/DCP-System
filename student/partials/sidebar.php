@@ -63,8 +63,8 @@
             </button>
         <?php endif; ?>
     </div>
-
-    <a href="../index.php" class="mt-3">
+            
+    <a href="../actions/logout.php" class="mt-3">
         <i class="bi bi-box-arrow-right"></i> Logout
     </a>
 </div>

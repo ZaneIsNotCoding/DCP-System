@@ -1,5 +1,6 @@
 <?php
 require_once '../includes/session.php';
+require_once '../includes/auth.php';
 require_once '../config/database.php';
 
 require_once '../vendor/autoload.php';
@@ -7,10 +8,7 @@ require_once '../vendor/autoload.php';
 use Dompdf\Dompdf;
 
 // AUTH CHECK
-if (!isset($_SESSION['user'])) {
-    header("Location: ../index.php");
-    exit;
-}
+requireRole('student');
 
 $student_id = $_SESSION['user']['id'];
 
@@ -42,6 +40,13 @@ foreach ($requirements as $req) {
 
 $is_cleared = ($total > 0 && $total === $cleared);
 
+if (!$is_cleared) {
+    header("Location: dashboard.php?error=not_cleared");
+    exit;
+}
+
+$studentName = htmlspecialchars($student['name'] ?? '', ENT_QUOTES, 'UTF-8');
+
 // =====================
 // BUILD HTML
 // =====================
@@ -54,7 +59,7 @@ $html = '
 
 <p style="text-align:center;">This is to certify that</p>
 
-<h3 style="text-align:center;">'.$student['name'].'</h3>
+<h3 style="text-align:center;">'.$studentName.'</h3>
 
 <p style="text-align:center;">
 has completed the required clearance process.
@@ -69,11 +74,6 @@ has completed the required clearance process.
 <p>Total Requirements: '.$total.'</p>
 <p>Cleared: '.$cleared.'</p>
 <p>Pending: '.($total - $cleared).'</p>
-
-<br><br>
-
-<p style="text-align:center;">_____________________</p>
-<p style="text-align:center;">Registrar / Admin</p>
 ';
 
 // =====================

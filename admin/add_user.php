@@ -1,13 +1,12 @@
 <?php
 require_once '../includes/session.php';
+require_once '../includes/auth.php';
 require_once '../config/database.php';
-include 'layout.php';
 
 // AUTH CHECK
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
-    header("Location: ../index.php");
-    exit;
-}
+requireRole('admin');
+
+include 'layout.php';
 
 $message = "";
 
@@ -15,6 +14,7 @@ $message = "";
 // HANDLE FORM SUBMIT
 // =====================
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    verify_csrf_token();
 
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
@@ -24,6 +24,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Basic validation
     if (empty($name) || empty($email) || empty($role) || empty($password)) {
         $message = "All fields are required.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "Invalid email format.";
+    } elseif (!in_array($role, ['admin', 'student'], true)) {
+        $message = "Invalid role selected.";
+    } elseif (strlen($password) < 8) {
+        $message = "Password must be at least 8 characters.";
     } else {
 
         try {
@@ -84,6 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="card card-custom p-4">
 
         <form method="POST">
+            <?php echo csrf_field(); ?>
 
             <!-- NAME -->
             <div class="mb-3">
@@ -103,7 +110,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <select name="role" class="form-select" required>
                     <option value="">Select Role</option>
                     <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
                     <option value="student">Student</option>
                 </select>
             </div>

@@ -135,7 +135,7 @@ $user = $_SESSION['user'];
             <i class="bi bi-list-check"></i> Requirements
         </a>
 
-        <a href="../index.php">
+        <a href="../actions/logout.php">
             <i class="bi bi-box-arrow-right"></i> Logout
         </a>
 

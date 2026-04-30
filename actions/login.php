@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/../controllers/AuthController.php';
+require_once __DIR__ . '/../includes/session.php';
+
+verify_csrf_token();
 
 $auth = new AuthController();
 

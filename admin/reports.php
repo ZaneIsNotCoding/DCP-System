@@ -1,23 +1,30 @@
 <?php
 require_once '../includes/session.php';
+require_once '../includes/auth.php';
 require_once '../config/database.php';
-include 'layout.php';
 
 // AUTH CHECK
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
-    header("Location: ../index.php");
-    exit;
-}
+requireRole('admin');
 
 // =====================
 // FETCH STUDENTS + STATUS
 // =====================
 $students = $conn->query("
-    SELECT id, name, email, clearance_status
-    FROM users
-    WHERE role = 'student'
-    ORDER BY name ASC
+    SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.clearance_status,
+        COUNT(r.id) AS total_requirements,
+        COALESCE(SUM(r.status = 'cleared'), 0) AS cleared_requirements
+    FROM users u
+    LEFT JOIN requirements r ON r.student_id = u.id
+    WHERE u.role = 'student'
+    GROUP BY u.id, u.name, u.email, u.clearance_status
+    ORDER BY u.name ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+include 'layout.php';
 ?>
 
 <!DOCTYPE html>
@@ -60,16 +67,20 @@ $students = $conn->query("
 
 <div class="p-4">
 
-    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-        <h4 class="page-title fw-bold">📊 Clearance Reports</h4>
+        <h4 class="page-title fw-bold">Clearance Reports</h4>
 
-        <button onclick="window.print()" class="btn btn-primary">
-            🖨 Print Report
-        </button>
+        <div class="d-flex gap-2">
+            <a href="reports_pdf.php" class="btn btn-primary">
+                Download PDF
+            </a>
+
+            <button onclick="window.print()" class="btn btn-outline-primary">
+                Print Report
+            </button>
+        </div>
     </div>
 
-    <!-- REPORT TABLE -->
     <div class="card card-custom p-3">
 
         <table class="table table-hover align-middle">
@@ -78,6 +89,7 @@ $students = $conn->query("
                 <tr>
                     <th>Student Name</th>
                     <th>Email</th>
+                    <th>Requirements</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -93,6 +105,11 @@ $students = $conn->query("
 
                     <td>
                         <?php echo htmlspecialchars($s['email']); ?>
+                    </td>
+
+                    <td>
+                        <?php echo (int) $s['cleared_requirements']; ?> /
+                        <?php echo (int) $s['total_requirements']; ?> cleared
                     </td>
 
                     <td>

@@ -6,6 +6,7 @@ $message = "";
 
 // HANDLE FORM SUBMISSION
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    verify_csrf_token();
 
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
@@ -15,33 +16,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "All fields are required";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format";
+    } elseif (strlen($password) < 8) {
+        $message = "Password must be at least 8 characters";
     } else {
 
         $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $check->bind_param("s", $email);
-        $check->execute();
-        $check->store_result();
+        $check->execute([$email]);
 
-        if ($check->num_rows > 0) {
+        if ($check->fetch()) {
             $message = "Email already exists";
         } else {
 
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $role = "user";
+            $role = "student";
 
             $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $name, $email, $hashedPassword, $role);
 
-            if ($stmt->execute()) {
+            if ($stmt->execute([$name, $email, $hashedPassword, $role])) {
                 $message = "success";
             } else {
                 $message = "Registration failed";
             }
-
-            $stmt->close();
         }
-
-        $check->close();
     }
 }
 ?>
@@ -126,6 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php endif; ?>
 
             <form method="POST">
+                <?php echo csrf_field(); ?>
 
                 <div class="mb-3">
                     <label>Full Name</label>

@@ -1,15 +1,14 @@
 <?php
 require_once '../includes/session.php';
+require_once '../includes/auth.php';
 require_once '../config/database.php';
+require_once '../includes/clearance_engine.php';
 
 // AUTH CHECK
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
-    header("Location: ../index.php");
-    exit;
-}
+requireRole('admin');
 
 // FETCH STUDENTS
-$students = $conn->query("SELECT id, name FROM users WHERE role='student'")->fetchAll(PDO::FETCH_ASSOC);
+$students = $conn->query("SELECT id, name FROM users WHERE role='student' ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 // DEFAULT REQUIREMENTS
 $defaultRequirements = [
@@ -23,8 +22,14 @@ $defaultRequirements = [
 // HANDLE FORM
 // =====================
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    verify_csrf_token();
 
-    $student_id = $_POST['student_id'];
+    $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
+
+    if (!$student_id) {
+        header("Location: assign_requirement.php?error=invalid");
+        exit;
+    }
 
     foreach ($defaultRequirements as $req) {
 
@@ -46,14 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
+    syncClearanceStatus($student_id, $conn);
+
     header("Location: assign_requirement.php?success=1");
     exit;
 }
 
 include 'layout.php';
 ?>
-
-<!-- ===================== UI ===================== -->
 
 <div class="container p-4">
 
@@ -65,16 +70,23 @@ include 'layout.php';
     </div>
 <?php endif; ?>
 
+<?php if (isset($_GET['error'])): ?>
+    <div class="alert alert-danger">
+        Unable to assign requirements.
+    </div>
+<?php endif; ?>
+
 <div class="card p-4">
 
     <form method="POST">
+        <?php echo csrf_field(); ?>
 
         <div class="mb-3">
             <label class="form-label">Select Student</label>
             <select name="student_id" class="form-select" required>
                 <option value="">Choose student</option>
                 <?php foreach ($students as $s): ?>
-                    <option value="<?php echo $s['id']; ?>">
+                    <option value="<?php echo (int) $s['id']; ?>">
                         <?php echo htmlspecialchars($s['name']); ?>
                     </option>
                 <?php endforeach; ?>

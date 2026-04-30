@@ -1,12 +1,10 @@
 <?php
 require_once '../includes/session.php';
+require_once '../includes/auth.php';
 require_once '../config/database.php';
-include 'partials/sidebar.php';
+
 // AUTH CHECK
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'student') {
-    header("Location: ../index.php");
-    exit;
-}
+requireRole('student');
 
 $user = $_SESSION['user'];
 $student_id = $user['id'];
@@ -22,22 +20,21 @@ $status = $statusStmt->fetchColumn();
 $stmt = $conn->prepare("
     SELECT 
         COUNT(*) as total,
-        SUM(status='cleared') as cleared,
-        SUM(status!='cleared') as pending
+        COALESCE(SUM(status='cleared'), 0) as cleared,
+        COALESCE(SUM(status!='cleared'), 0) as pending
     FROM requirements
     WHERE student_id = ?
 ");
 $stmt->execute([$student_id]);
 $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$total = $data['total'];
-$cleared = $data['cleared'];
-$pending = $data['pending'];
+$total = (int) $data['total'];
+$cleared = (int) $data['cleared'];
+$pending = (int) $data['pending'];
 
 $percent = ($total > 0) ? ($cleared / $total) * 100 : 0;
 $is_cleared = (strtolower(trim($status)) === 'cleared');
 ?>
-s
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,6 +110,8 @@ s
 
 <body>
 
+<?php include 'partials/sidebar.php'; ?>
+
 <!-- MAIN -->
 <div class="main">
 
@@ -159,11 +158,11 @@ s
     <div class="mt-4">
     <?php if ($is_cleared): ?>
         <a href="student_print_clearance.php" class="btn btn-success btn-lg">
-            🖨 Print Clearance Certificate
+            Print Clearance Certificate
         </a>
     <?php else: ?>
         <button class="btn btn-secondary btn-lg" disabled>
-            🖨 Clearance Not Available
+            Clearance Not Available
         </button>
     <?php endif; ?>
 </div>

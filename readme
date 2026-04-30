@@ -1,0 +1,78 @@
+🗄️ Database: dcp_system
+CREATE DATABASE IF NOT EXISTS dcp_system;
+USE dcp_system;
+👤 Table: offices
+CREATE TABLE offices (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    office_name VARCHAR(100) NOT NULL
+);
+👨‍🎓 Table: students
+CREATE TABLE students (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    course VARCHAR(100),
+    year_level VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+👥 Table: users
+CREATE TABLE users (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin','staff','student') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    office_id INT(11),
+    clearance_status VARCHAR(20),
+
+    FOREIGN KEY (office_id) REFERENCES offices(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+📋 Table: requirements
+CREATE TABLE requirements (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    student_id INT(11) NOT NULL,
+    requirement_name VARCHAR(255) NOT NULL,
+    status ENUM('pending','cleared') DEFAULT 'pending',
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (student_id) REFERENCES students(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+✅ Table: clearance_status
+CREATE TABLE clearance_status (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    student_id INT(11) NOT NULL,
+    office_id INT(11) NOT NULL,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    remarks TEXT,
+    approved_by INT(11),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (student_id) REFERENCES students(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (office_id) REFERENCES offices(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (approved_by) REFERENCES users(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+⚠️ Notes (Important)
+approved_by links to users.id (who approved/rejected).
+office_id in users allows assigning staff/admin to offices.
+student_id in requirements & clearance_status correctly references students.id (not the string student_id).
+All foreign keys include proper ON DELETE / ON UPDATE rules.
+✅ Ready to Use
+
+Just copy everything and run it in:
+
+phpMyAdmin → SQL tab

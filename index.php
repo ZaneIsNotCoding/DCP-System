@@ -97,6 +97,7 @@ require_once 'includes/session.php';
             <?php endif; ?>
 
             <form method="POST" action="actions/login.php">
+                <?php echo csrf_field(); ?>
 
                 <div class="mb-3">
                     <label>Email</label>

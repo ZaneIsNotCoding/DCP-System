@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/session.php';
-require_once '../config/database.php';
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/../config/database.php';
 
 /**
  * REAL-TIME CLEARANCE SYNC ENGINE
