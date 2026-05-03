@@ -45,35 +45,155 @@ if (!$is_cleared) {
     exit;
 }
 
-$studentName = htmlspecialchars($student['name'] ?? '', ENT_QUOTES, 'UTF-8');
+$control_no = "ID-" . date("Y") . "-" . str_pad($student_id, 5, "0", STR_PAD_LEFT);
+$course = $student['course'] ?? $student['program'] ?? '';
+$section = $student['section'] ?? $student['year_section'] ?? '';
+$courseSection = trim($course . ($section ? ' - ' . $section : ''));
+if ($courseSection === '') {
+    $courseSection = 'BSIT';
+}
+
+function e($value) {
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
 
 // =====================
 // BUILD HTML
 // =====================
 $html = '
-<h2 style="text-align:center; color:#0d6efd;">ISABELA STATE UNIVERSITY</h2>
-<h4 style="text-align:center;">Digital Clearance Processing System</h4>
-<hr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            margin: 0.5in;
+        }
 
-<h2 style="text-align:center;">CLEARANCE CERTIFICATE</h2>
+        body {
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            margin: 0;
+        }
 
-<p style="text-align:center;">This is to certify that</p>
+        .page {
+            width: 4.8in;
+            min-height: 6.2in;
+            margin: 0 auto;
+            padding: 0.28in 0.35in;
+        }
 
-<h3 style="text-align:center;">'.$studentName.'</h3>
+        .header {
+            text-align: center;
+            line-height: 1.25;
+            font-weight: 700;
+        }
 
-<p style="text-align:center;">
-has completed the required clearance process.
-</p>
+        .republic {
+            font-size: 11px;
+        }
 
-<h2 style="text-align:center; color:'.($is_cleared ? 'green' : 'red').'">
-'.($is_cleared ? 'CLEARED' : 'NOT CLEARED').'
-</h2>
+        .form-title {
+            margin: 10px 0 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: underline;
+        }
 
-<br>
+        .statement {
+            margin: 8px 0 14px;
+            text-align: justify;
+            line-height: 1.35;
+        }
 
-<p>Total Requirements: '.$total.'</p>
-<p>Cleared: '.$cleared.'</p>
-<p>Pending: '.($total - $cleared).'</p>
+        .field {
+            margin-bottom: 5px;
+            min-height: 20px;
+            width: 100%;
+        }
+
+        .label {
+            display: inline-block;
+            font-weight: 700;
+            width: 96px;
+        }
+
+        .line {
+            border-bottom: 1px solid #111;
+            display: inline-block;
+            min-height: 18px;
+            padding: 0 5px 1px;
+            width: 250px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #111;
+            height: 20px;
+        }
+
+        .office {
+            padding-top: 2px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 10px;
+        }
+
+        .footer {
+            margin: 34px auto 0;
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="header">
+            <div class="republic">Student Clearance (1st Semester 2026-2026)</div>
+        </header>
+
+        <div class="form-title">STUDENT CLEARANCE</div>
+        <p class="statement">
+            This is to certify that the student named below has completed all assigned
+            clearance requirements and is officially cleared.
+        </p>
+
+        <section class="meta">
+            <div class="field">
+                <span class="label">Name:</span>
+                <span class="line">'.e($student['name'] ?? '').'</span>
+            </div>
+            <div class="field">
+                <span class="label">ID No:</span>
+                <span class="line">'.e($control_no).'</span>
+            </div>
+            <div class="field">
+                <span class="label">Course &amp; Section:</span>
+                <span class="line">'.e($courseSection).'</span>
+            </div>
+            <div class="field">
+                <span class="label">Date:</span>
+                <span class="line">'.date('F d, Y').'</span>
+            </div>
+            <div class="field">
+                <span class="label">Purpose:</span>
+                <span class="line">Clearance completion</span>
+            </div>
+            <div class="field">
+                <span class="label">Status:</span>
+                <span class="line">CLEARED</span>
+            </div>
+        </section>
+
+        <section class="footer">
+            <div>
+                <div class="signature-line"></div>
+                <div class="office">Student Signature</div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
 ';
 
 // =====================
@@ -81,8 +201,8 @@ has completed the required clearance process.
 // =====================
 $dompdf = new Dompdf();
 $dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'portrait');
+$dompdf->setPaper('letter', 'portrait');
 $dompdf->render();
-$dompdf->stream("clearance_certificate.pdf", ["Attachment" => true]);
+$dompdf->stream("student_clearance_" . $student_id . ".pdf", ["Attachment" => true]);
 exit;
 ?>

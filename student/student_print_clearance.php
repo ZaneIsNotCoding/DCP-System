@@ -153,20 +153,9 @@ function e($value) {
         }
 
         .statement {
-            margin: 8px 0 10px;
+            margin: 8px 0 14px;
             text-align: justify;
             line-height: 1.35;
-        }
-
-        .signatures {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
-        }
-
-        .signatures td {
-            padding: 8px 6px 2px;
-            vertical-align: bottom;
         }
 
         .signature-line {
@@ -185,7 +174,7 @@ function e($value) {
             display: grid;
             grid-template-columns: 1fr;
             width: 60%;
-            margin: 16px auto 0;
+            margin: 34px auto 0;
         }
 
         .print-actions {
@@ -194,32 +183,51 @@ function e($value) {
             text-align: center;
         }
 
-        .print-btn {
+        .print-btn,
+        .download-btn {
+            display: inline-block;
             border: 0;
             border-radius: 6px;
-            background: #0d6efd;
             color: #fff;
             cursor: pointer;
             font-weight: 700;
+            margin: 0 4px;
             padding: 10px 18px;
+            text-decoration: none;
+        }
+
+        .print-btn {
+            background: #0d6efd;
+        }
+
+        .download-btn {
+            background: #198754;
         }
 
         @page {
             size: letter portrait;
-            margin: 0.35in;
+            margin: 0.5in;
         }
 
         @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
             body {
                 background: #fff;
+                display: flex;
+                justify-content: center;
             }
 
             .page {
                 width: 4.8in;
                 min-height: 6.2in;
-                margin: 0;
+                margin: 0 auto;
                 padding: 0.28in 0.35in;
                 box-shadow: none;
+                page-break-inside: avoid;
             }
 
             .print-actions {
@@ -239,7 +247,7 @@ function e($value) {
     <div class="form-title">STUDENT CLEARANCE</div>
     <p class="statement">
         This is to certify that the student named below has completed all assigned
-        clearance requirements and is cleared by the offices listed below.
+        clearance requirements and is officially cleared.
     </p>
     <section class="meta">
         <div class="field">
@@ -268,29 +276,6 @@ function e($value) {
         </div>
     </section>
 
-    <table class="signatures">
-        <tbody>
-            <?php foreach ($requirements as $index => $req): ?>
-                <?php if ($index % 2 == 0): ?>
-                    <tr>
-                <?php endif; ?>
-
-                <td>
-                    <div class="signature-line"></div>
-                    <div class="office"><?php echo e($req['requirement_name']); ?></div>
-                </td>
-
-                <?php if ($index % 2 == 1): ?>
-                    </tr>
-                <?php endif; ?>
-            <?php endforeach; ?>
-
-            <?php if ($total % 2 == 1): ?>
-                <td></td></tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-
     <section class="footer">
         <div>
             <div class="signature-line"></div>
@@ -301,6 +286,7 @@ function e($value) {
 
 <div class="print-actions">
     <button onclick="window.print()" class="print-btn">Print Clearance</button>
+    <a href="print_clearance_pdf.php" class="download-btn">Download PDF</a>
 </div>
 
 </body>
